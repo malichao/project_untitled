@@ -30,6 +30,22 @@ class Car:
         self.bbox_x = [[], [], [], [], [], [], [], ]
         self.bbox_y = [[], [], [], [], [], [], [], ]
 
+    def set_route(self, route):
+        self.route = route
+        self.set_pose(route.x[0], route.y[0], route.yaw[0])
+        self.s = route.s[0]
+        self.route_idx = 0
+
+    def follow_route(self, dt=0.1):
+        self.drive(dt)
+        self.s += self.v * dt
+        idx = self.route_idx + 1
+        if idx >= (len(self.route.s)):
+            idx = 0
+        if self.s > self.route.s[idx] or self.s > self.route.s[-1]:
+            self.yaw = self.route.yaw[idx]
+            self.route_idx = idx
+
     def drive(self, dt=0.1):
         self.x = self.x + self.v * math.cos(self.yaw) * dt
         self.y = self.y + self.v * math.sin(self.yaw) * dt
@@ -49,7 +65,6 @@ class Car:
         self.label.set_x(label_x)
         self.label.set_y(label_y)
         self.label.set_rotation(self.yaw / math.pi * 180)
-
 
         return [self.bbox, self.label]
 
