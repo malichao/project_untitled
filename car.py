@@ -8,9 +8,12 @@ import math
 class Car:
     def __init__(self, axes=None, id=0, length=5, width=2, label='car0', color='black'):
         self.id = id
+        self.v = 0
         self.set_pose(0, 0, 0)
         self.set_length_width(length, width)
-        self.label = Annotation('car0', [0, 0])
+        self.label = Annotation(
+            label, [0, 0], backgroundcolor='white', size='small', annotation_clip=False)
+        self.label.set_rotation_mode('anchor')
         self.bbox = Line2D([], [], 2, color=color)
         if axes:
             axes.add_line(self.bbox)
@@ -19,31 +22,36 @@ class Car:
     def set_length_width(self, length, width):
         self.length = length    # x dir
         self.width = width      # y dir
-        self._bbox_x = [0, length, length, 0, 0,length * 0.3,0]
-        self._bbox_y = [0, 0, width, width, 0,width*0.5,width]
+        self._bbox_x = [0, length, length, 0, 0, length * 0.3, 0]
+        self._bbox_y = [0, 0, width, width, 0, width * 0.5, width]
         for i in range(0, len(self._bbox_x)):
             self._bbox_x[i] -= length * 0.3
             self._bbox_y[i] -= width * 0.5
-        self.bbox_x = [[], [], [], [], [], [],[],]
-        self.bbox_y = [[], [], [], [], [], [],[],]
+        self.bbox_x = [[], [], [], [], [], [], [], ]
+        self.bbox_y = [[], [], [], [], [], [], [], ]
+
+    def drive(self, dt=0.1):
+        self.x = self.x + self.v * math.cos(self.yaw) * dt
+        self.y = self.y + self.v * math.sin(self.yaw) * dt
 
     def set_pose(self, x, y, yaw):
         self.x, self.y, self.yaw = x, y, yaw
 
-    def draw(self,axes=None):
+    def draw(self, axes=None):
         # Update bounding box
         for i in range(0, len(self._bbox_x)):
             self.bbox_x[i], self.bbox_y[i] = self.local_to_global(self._bbox_x[i],
                                                                   self._bbox_y[i])
-        self.bbox.set_data(self.bbox_x,self.bbox_y)
+        self.bbox.set_data(self.bbox_x, self.bbox_y)
 
         # Update label position
-        self.label.set_x(self.x)
-        self.label.set_y(self.y)
-        
-        # if axes:
-        #     axes.add_line(self.bbox)
-        #     axes.add_artist(self.label)
+        label_x, label_y = self.local_to_global(0.7, -0.2)
+        self.label.set_x(label_x)
+        self.label.set_y(label_y)
+        self.label.set_rotation(self.yaw / math.pi * 180)
+
+
+        return [self.bbox, self.label]
 
     def rotate(self, x, y, yaw):
         x_ = x * math.cos(yaw) - y * math.sin(yaw)
@@ -58,15 +66,26 @@ class Car:
         x_, y_ = x - self.x, y - self.y
         return self.rotate(x_, y_, -self.yaw)
 
-t = Annotation('car0', xy=(2, 1),xytext=(3, 1.5),color='black')
+    def to_figure_angle(self, radian):
+        return -radian / math.pi * 180.
+
+
+t = Annotation('car0', xy=(2, 1), xytext=(3, 1.5), color='black')
+
+
 def main():
     print("Test Car class")
     fig1 = plt.figure()
     ax1 = fig1.add_subplot(111, aspect='equal')
 
-    car = Car(ax1)
-    car.set_pose(5, 5, math.pi/4)
-    car.draw()
+    car1 = Car(ax1, label='113')
+    car1.set_pose(5, 5, math.pi / 4)
+    car1.draw()
+
+    car2 = Car(ax1, label='5422', color='r')
+    car2.set_pose(0, 0, math.pi * 0.8)
+    car2.set_pose(0, 0, 0)
+    car2.draw()
 
     ax1.set_xlim(-10, 10)
     ax1.set_ylim(-10, 10)
