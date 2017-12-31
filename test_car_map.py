@@ -23,6 +23,7 @@ class DriveCar(animation.TimedAnimation):
 
         self.car = Car(self.axes, label='0')
         self.car.set_route(self.map.route)
+        self.car.set_route_idx(1)
         self.car.v=20
 
         animation.TimedAnimation.__init__(self, self.fig, interval=250, blit=False)
@@ -38,8 +39,8 @@ class DriveCar(animation.TimedAnimation):
         self._drawn_artists.extend(self.car.draw())
 
         # Update view
-        view_x = 100
-        view_y = 50
+        view_x = 50
+        view_y = view_x/2
         self.axes.set_xlim(self.car.x - view_x, self.car.x + view_x)
         self.axes.set_ylim(self.car.y - view_y, self.car.y + view_y)
         #ax.autoscale_view()

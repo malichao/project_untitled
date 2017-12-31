@@ -30,21 +30,32 @@ class Car:
         self.bbox_x = [[], [], [], [], [], [], [], ]
         self.bbox_y = [[], [], [], [], [], [], [], ]
 
-    def set_route(self, route):
+    def set_route(self, route,idx=0):
         self.route = route
-        self.set_pose(route.x[0], route.y[0], route.yaw[0])
-        self.s = route.s[0]
-        self.route_idx = 0
+        self.set_route_idx(0)
+        
+    def set_route_idx(self,idx):
+        self.s = self.route.s[idx]
+        self.route_idx = idx
+        self.set_pose(self.route.x[idx], self.route.y[idx], self.route.yaw[idx])
 
     def follow_route(self, dt=0.1):
-        self.drive(dt)
+        next_idx = self.route_idx + 1
+        if next_idx >= (len(self.route.s)):
+            next_idx = 0
+
         self.s += self.v * dt
-        idx = self.route_idx + 1
-        if idx >= (len(self.route.s)):
-            idx = 0
-        if self.s > self.route.s[idx] or self.s > self.route.s[-1]:
-            self.yaw = self.route.yaw[idx]
-            self.route_idx = idx
+        ds = self.s - self.route.s[self.route_idx]
+        dx = self.route.x[next_idx] - self.route.x[self.route_idx]
+        dy = self.route.y[next_idx] - self.route.y[self.route_idx]
+        ratio = ds / (self.route.s[next_idx] - self.route.s[self.route_idx])
+        self.set_pose(self.route.x[self.route_idx] + dx * ratio,
+                      self.route.y[self.route_idx] + dy * ratio,
+                      self.yaw)
+
+        if self.s > self.route.s[next_idx] or self.s > self.route.s[-1]:
+            self.yaw = self.route.yaw[next_idx]
+            self.route_idx = next_idx
 
     def drive(self, dt=0.1):
         self.x = self.x + self.v * math.cos(self.yaw) * dt

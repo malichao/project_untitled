@@ -40,8 +40,12 @@ class Map:
             if is_loop:
                 self.route.x.append(self.route.x[0])
                 self.route.y.append(self.route.y[0])
-            for dx,dy in zip(self.route.dx,self.route.dy):
-                self.route.yaw.append(math.atan2(dy,dx) +math.pi/2)
+            for i in range(0, len(self.route.s) - 1):
+                self.route.yaw.append(math.atan2(self.route.y[i + 1] - self.route.y[i],
+                                                 self.route.x[i + 1] - self.route.x[i]))
+            self.route.yaw.append(self.route.yaw[-1])
+            # for dx,dy in zip(self.route.dx,self.route.dy):
+            #     self.route.yaw.append(math.atan2(dy,dx) +math.pi/2)
     
     def draw(self):
         self.map[0].set_data(self.route.x,self.route.y)
@@ -54,15 +58,17 @@ def main():
 
     map1 = Map(ax1)
     map1.read("highway_map.csv")
-    print(map1.x)
-    print(map1.y)
+    print(map1.route.x)
+    print(map1.route.y)
     map1.draw()
 
-    for i in range(0,len(map1.s)):
-        angle = math.atan2(map1.dy[i],map1.dx[i]) + math.pi/2
-        dir_x = math.cos(angle)
-        dir_y = math.sin(angle)
-        ax1.arrow(map1.x[i],map1.y[i],dir_x,dir_y,linewidth=3,color='r')
+    for i in range(0,len(map1.route.s)):
+        angle = math.atan2(map1.route.dy[i],map1.route.dx[i]) + math.pi/2
+        # dir_x = math.cos(angle)*15
+        # dir_y = math.sin(angle)*15        
+        dir_x = map1.route.dx[i]*15
+        dir_y = map1.route.dy[i]*15
+        ax1.arrow(map1.route.x[i],map1.route.y[i],dir_x,dir_y,linewidth=2,color='r')
 
     ax1.relim()
     ax1.autoscale_view()
