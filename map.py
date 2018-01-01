@@ -42,8 +42,8 @@ class Route:
                                            self.x[i + 1] - self.x[i]))
             self.yaw.append(self.yaw[-1])
 
-    def to_center_xy(self, s, lane=0):
-        idx = bisect.bisect(self.s, s) - 1
+    def to_center_pose(self, s, lane=0):
+        idx = self.get_idx(s)
         next_idx = idx + 1
         if next_idx >= (len(self.s)):
             next_idx = 0
@@ -56,7 +56,13 @@ class Route:
         dx = (next_x - cur_x) * ratio
         dy = (next_y - cur_y) * ratio
 
-        return cur_x + dx, cur_y + dy
+        return cur_x + dx, cur_y + dy, self.yaw[idx]
+
+    def get_idx(self,s):
+        return bisect.bisect(self.s,s)-1
+
+    def get_yaw(self,idx):
+        return self.yaw[idx]
 
     def get_edge_xy(self, idx, lane_edge=0):
         return self.x[idx] + self.dx[idx] * self.lane_width * lane_edge, \

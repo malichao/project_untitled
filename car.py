@@ -30,28 +30,28 @@ class Car:
         self.bbox_x = [[], [], [], [], [], [], [], ]
         self.bbox_y = [[], [], [], [], [], [], [], ]
 
-    def set_route(self, route, idx=0):
+    def set_route(self, route, s=0,lane=0):
         self.route = route
-        self.set_route_idx(0)
+        self.set_route_s(s,lane)
 
-    def set_route_idx(self, idx):
+    def set_route_s(self, s, lane=0):
+        self.s = s
+        self.lane = lane
+        self.route_idx = self.route.get_idx(s)
+        self.x, self.y,self.yaw = self.route.to_center_pose(s,lane)
+
+    def set_route_idx(self, idx, lane=0):
         self.s = self.route.s[idx]
+        self.lane = lane
         self.route_idx = idx
         self.set_pose(self.route.x[idx],
                       self.route.y[idx], self.route.yaw[idx])
 
-    def follow_route(self, lane=0, dt=0.1):
-        next_idx = self.route_idx + 1
-        if next_idx >= (len(self.route.s)):
-            next_idx = 0
-
+    def follow_route(self, dt=0.1):
         self.s += self.v * dt
-        x, y = self.route.to_center_xy(self.s)
-        self.set_pose(x, y, self.yaw)
+        self.x, self.y,self.yaw = self.route.to_center_pose(self.s,self.lane)
+        self.route_idx = self.route.get_idx(self.s)
 
-        if self.s > self.route.s[next_idx] or self.s > self.route.s[-1]:
-            self.yaw = self.route.yaw[next_idx]
-            self.route_idx = next_idx
 
     def drive(self, dt=0.1):
         self.x = self.x + self.v * math.cos(self.yaw) * dt
