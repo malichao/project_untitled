@@ -72,6 +72,10 @@ class Route:
         yaw = self.yaw[idx]
         return x, y, yaw
 
+    def to_d(self, lane):
+        if lane>=0 : return (lane + 0.5) * self.lane_width
+        return (lane - 0.5) * self.lane_width
+
     def to_center_pose(self, s, lane=0):
         d = self.lane_width * (lane + 0.5)
         return self.to_pose(s, d)

@@ -32,26 +32,22 @@ class Car:
 
     def set_route(self, route, s=0,lane=0):
         self.route = route
-        self.set_route_s(s,lane)
+        self.move_to_route(s,lane)
 
-    def set_route_s(self, s, lane=0):
+    def move_to_route_idx(self, idx, lane=0):
+        self.move_to_route(self.route.s[idx], lane)
+
+    def move_to_route(self, s, lane=0):
         self.s = s
+        self.d = self.route.to_d(lane)
         self.lane = lane
         self.route_idx = self.route.get_idx(s)
         self.x, self.y,self.yaw = self.route.to_center_pose(s,lane)
-
-    def set_route_idx(self, idx, lane=0):
-        self.s = self.route.s[idx]
-        self.lane = lane
-        self.route_idx = idx
-        self.set_pose(self.route.x[idx],
-                      self.route.y[idx], self.route.yaw[idx])
 
     def follow_route(self, dt=0.1):
         self.s += self.v * dt
         self.x, self.y,self.yaw = self.route.to_center_pose(self.s,self.lane)
         self.route_idx = self.route.get_idx(self.s)
-
 
     def drive(self, dt=0.1):
         self.x = self.x + self.v * math.cos(self.yaw) * dt

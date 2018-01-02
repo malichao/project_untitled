@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+from matplotlib.lines import Line2D
 
 class TrajectoryGenerator:
     TRAJ = 0
@@ -14,17 +14,21 @@ class TrajectoryGenerator:
         self.t = []
         self.lines = []
         self.axes = axes # assuming [traj,vel,acc,jerk]
+        self._draw_traj = self.draw_traj
+
+    def clear(self):
+        self.traj_coefs[:]=[]
+        self.t[:]=[]
 
     def generate(self, start_s, start_d, goal_s, goal_d, t):
         self.traj_coefs.append(
             [self.jmt(start_s, goal_s, t), self.jmt(start_d, goal_d, t)])
-        print self.traj_coefs[0]
         self.t.append(t)
 
     def draw(self):
         self.lines[:] = [[],[],[],[]]
         for traj, t in zip(self.traj_coefs, self.t):
-            x, y = self.draw_traj(traj, t)
+            x, y = self._draw_traj(traj, t)
             self.lines[self.TRAJ].append(Line2D(x, y, 1, color='orange'))
 
             if len(self.axes) == 1: continue
@@ -54,6 +58,15 @@ class TrajectoryGenerator:
         for i in range(4):
             for line in self.lines[i]:
                 self.axes[i].add_line(line)
+
+    def set_transform(self,to_pose):
+        def _draw_traj(traj,T):
+            x,y=self.draw_traj(traj,T)
+            for i in range(len(x)):
+                x[i],y[i],_=to_pose(x[i],y[i])
+            return x,y
+
+        self._draw_traj = _draw_traj
 
     def draw_traj(self, traj, T):
         t = 0
@@ -211,5 +224,4 @@ def main():
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import matplotlib.patches as patches
-    from matplotlib.lines import Line2D
     main()
