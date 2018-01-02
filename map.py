@@ -13,6 +13,8 @@ class Route:
         self.x = []
         self.y = []
         self.s = []
+        self.sx = []
+        self.sy = []
         self.dx = []
         self.dy = []
         self.yaw = []
@@ -21,12 +23,14 @@ class Route:
         if lane_num < 1:
             raise("Lane number must > 1")
 
-    def read(self, file):
+    def read(self, file, is_loop=True):
         with open(file) as csvfile:
             reader = csv.DictReader(csvfile, delimiter=',')
             self.x[:] = []
             self.y[:] = []
             self.s[:] = []
+            self.sx[:] = []
+            self.sy[:] = []
             self.dx[:] = []
             self.dy[:] = []
             self.yaw[:] = []
@@ -37,31 +41,45 @@ class Route:
                 self.dx.append(float(row['dx']))
                 self.dy.append(float(row['dy']))
 
+            def calc(ax, ay, bx, by):
+                yaw = math.atan2(by - ay, bx - ax)
+                length = math.sqrt((bx - ax)**2 + (by - ay)**2)
+                sx = (bx - ax) / length
+                sy = (by - ay) / length
+                return sx, sy, yaw
+
             for i in range(0, len(self.s) - 1):
-                self.yaw.append(math.atan2(self.y[i + 1] - self.y[i],
-                                           self.x[i + 1] - self.x[i]))
-            self.yaw.append(self.yaw[-1])
+                sx, sy, yaw = calc(
+                    self.x[i], self.y[i], self.x[i + 1], self.y[i + 1])
+                self.yaw.append(yaw)
+                self.sx.append(sx)
+                self.sy.append(sy)
+
+            if is_loop:
+                sx, sy, yaw = calc(
+                    self.x[-1], self.y[-1], self.x[0], self.y[0])
+            else:
+                sx, sy, yaw = self.sx[-1], self.sy[-1], self.yaw[-1]
+            self.yaw.append(yaw)
+            self.sx.append(sx)
+            self.sy.append(sy)
+
+    def to_pose(self, s, d):
+        idx = self.get_idx(s)
+        ds = s - self.s[idx]
+        x = self.x[idx] + self.dx[idx] * d + self.sx[idx] * ds
+        y = self.y[idx] + self.dy[idx] * d + self.sy[idx] * ds
+        yaw = self.yaw[idx]
+        return x, y, yaw
 
     def to_center_pose(self, s, lane=0):
-        idx = self.get_idx(s)
-        next_idx = idx + 1
-        if next_idx >= (len(self.s)):
-            next_idx = 0
+        d = self.lane_width * (lane + 0.5)
+        return self.to_pose(s, d)
 
-        cur_x, cur_y = self.get_center_xy(idx, lane)
-        next_x, next_y = self.get_center_xy(next_idx, lane)
+    def get_idx(self, s):
+        return bisect.bisect(self.s, s) - 1
 
-        ds = s - self.s[idx]
-        ratio = ds / (self.s[next_idx] - self.s[idx])
-        dx = (next_x - cur_x) * ratio
-        dy = (next_y - cur_y) * ratio
-
-        return cur_x + dx, cur_y + dy, self.yaw[idx]
-
-    def get_idx(self,s):
-        return bisect.bisect(self.s,s)-1
-
-    def get_yaw(self,idx):
+    def get_yaw(self, idx):
         return self.yaw[idx]
 
     def get_edge_xy(self, idx, lane_edge=0):
@@ -83,8 +101,8 @@ class Map:
         self.map[0].set_linestyle('-')
         self.map[-1].set_linestyle('-')
 
-    def read(self, file):
-        self.route.read(file)
+    def read(self, file, is_loop=True):
+        self.route.read(file, is_loop)
 
     def draw(self, is_loop=True):
         for lane_edge in range(self.route.lane_num + 1):

@@ -27,6 +27,7 @@ class TrajectoryGenerator:
             x, y = self.draw_traj(traj, t)
             self.lines[self.TRAJ].append(Line2D(x, y, 1, color='orange'))
 
+            if len(self.axes) == 1: continue
             vel_s = self.differentiate(traj[self.TRAJ_S])
             x, y = self.draw_curve(vel_s,t)
             self.lines[self.VEL].append(Line2D(x, y, 1, color='r'))
@@ -34,6 +35,7 @@ class TrajectoryGenerator:
             x, y = self.draw_curve(vel_d,t)
             self.lines[self.VEL].append(Line2D(x, y, 1, color='b'))     
 
+            if len(self.axes) == 2: continue
             acc_s = self.differentiate(vel_s)
             x, y = self.draw_curve(acc_s,t)
             self.lines[self.ACC].append(Line2D(x, y, 1, color='r'))   
@@ -41,6 +43,7 @@ class TrajectoryGenerator:
             x, y = self.draw_curve(vel_d,t)
             self.lines[self.ACC].append(Line2D(x, y, 1, color='b'))  
 
+            if len(self.axes) == 3: continue
             jerk_s = self.differentiate(acc_s)
             x, y = self.draw_curve(jerk_s,t)
             self.lines[self.JERK].append(Line2D(x, y, 1, color='r'))   
@@ -157,10 +160,30 @@ def main():
 
     v = 10
     T = 7
+
+    # straight
     start_s = np.array([0, 10, 0])
     delta_s = np.array([70, 0, 0])
-    start_d = np.array([4, 0, 0])
+    start_d = np.array([0, 0, 0])
+    delta_d = np.array([0, 0,0])
+    traj_gen.generate(start_s, start_d,
+                      start_s + delta_s,
+                      start_d + delta_d,
+                      T)
+    # left
+    start_s = np.array([0, 10, 0])
+    delta_s = np.array([70, 0, 0])
+    start_d = np.array([0, 0, 0])
     delta_d = np.array([-4, 0,0])
+    traj_gen.generate(start_s, start_d,
+                      start_s + delta_s,
+                      start_d + delta_d,
+                      T)
+    # right
+    start_s = np.array([0, 10, 0])
+    delta_s = np.array([70, 0, 0])
+    start_d = np.array([0, 0, 0])
+    delta_d = np.array([4, 0,0])
     traj_gen.generate(start_s, start_d,
                       start_s + delta_s,
                       start_d + delta_d,

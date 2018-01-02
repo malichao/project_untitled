@@ -26,7 +26,7 @@ class DriveCar(animation.TimedAnimation):
                      Car(self.axes, label='2')]
         for i in range(len(self.cars)):
             self.cars[i].set_route(self.map.route, s=i * 20, lane=i)
-            self.cars[i].v = 40 - i * 5
+            self.cars[i].v = 40 - i * 2
 
         animation.TimedAnimation.__init__(
             self, self.fig, interval=50, blit=False)
